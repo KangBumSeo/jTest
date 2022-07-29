@@ -225,7 +225,7 @@ if (!this.JSON) {
 
     function str(key, holder) {
 // Produce a string from holder[key].
-
+    	
         var i,          // The loop counter.
             k,          // The member key.
             v,          // The member value.
@@ -471,7 +471,6 @@ replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
 
 // In the optional fourth stage, we recursively walk the new structure, passing
 // each name/value pair to a reviver function for possible transformation.
-
                 return typeof reviver === 'function' ?
                     walk({'': j}, '') : j;
             }

@@ -1,9 +1,6 @@
 package com.main;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,10 +12,12 @@ import com.uglify.UglifyRoadJs;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URLClassLoader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 /** jar 파일 읽어서 js파일들 난독화 작업 
  * 현재 난독화 작업까지 했다.
@@ -56,12 +55,6 @@ public class JarTest {
 			 throw new Exception("파일 디렉토리 재체크 부탁드립니다.( JAR가 존재하지 않습니다. )");
 		 }
 		 
-
-		JarFile jarLoad = new JarFile(filePathStr.get(0));
-		Enumeration<JarEntry> entries = jarLoad.entries();
-		 // jar 파일을 읽는 작업이 필요 
-		URLClassLoader classLoader;
-		
 		InputStream in = null;
 		ZipArchiveInputStream zais = null;
 		ZipArchiveEntry zipEntry = null;
@@ -70,7 +63,10 @@ public class JarTest {
 		File jarFile = new File(filePathStr.get(0));
 		ArrayList<String> fileList = new ArrayList<>();
 		if(jarFile.exists()) {
-			in = new FileInputStream(new File(filePathStr.get(0)));
+			File jarFileObj = new File(filePathStr.get(0));
+			in = new FileInputStream(jarFileObj);
+			
+			System.out.println(in);
 			
 			zais = new ZipArchiveInputStream(in, "UTF-8", true);
 			while((zipEntry = zais.getNextZipEntry()) != null) {
@@ -78,7 +74,7 @@ public class JarTest {
 				// text/x-jsp
 				String fileType = tika.detect(zipEntry.getName());
 				String fileDetailPath = zipEntry.getName();
-				if( fileType.equals("application/javascript") 
+				if(    fileType.equals("application/javascript") 
 					&& fileDetailPath.indexOf("jquery") == -1
 					&& fileDetailPath.indexOf("jqgrid") == -1
 					) {
@@ -87,23 +83,20 @@ public class JarTest {
 					int singleCh = 0;
 					String scriptDetail = "";
 					InputStreamReader jsCodeEncoding = new InputStreamReader( zais , "utf-8");
+					
 					while((singleCh = jsCodeEncoding.read()) != -1){
 						scriptDetail += (char)singleCh;
 		            }
 					System.out.println("---------- "+fileDetailPath+" ---------------");
-					if( fileDetailPath.equals("contents/js/nCommon.js")){
 					String ugStr = new UglifyRoadJs().uglify(scriptDetail);
-					System.out.println( "ugStr >>>>>> "+ugStr);
-					System.out.println("-------------------------");
 					Pattern pattern = Pattern.compile("^[a-zA-Z0-9,`~!@#$%^&*()-_=+;:/\'\"\\.\\,\\w\\s ]*");
 					Matcher stringChk = pattern.matcher(scriptDetail );
 					
 					String[] pathLength = fileDetailPath.split("/");
 					String pathLengthRun = pathLength[pathLength.length-1];   
-					fileWriter(ugStr,pathLengthRun);
-					}
-					//break;
+					fileWriter( ugStr , jarFileObj , pathLengthRun );
 				}
+					//break;
 //				else if( fileType.equals("text/x-jsp") ) {
 //					fileList.add(fileDetailPath);
 //					int singleCh = 0;
@@ -124,20 +117,31 @@ public class JarTest {
 		
 	}
 	
-	public static void fileWriter(String args , String fileName) throws Exception {
-
+	public static void fileWriter(String args , File jarFileObj , String fileName) throws Exception {
+		
 		File file = new File("C:/Users/YOU/Desktop/ICM2팀 강범서/"+fileName);
 
 		FileWriter fw = new FileWriter(file, true);
-
+		//FileWriter fw = new FileWriter(out, true);
+		
 		//fw.write("FileWriter는 한글로된 " + "\r\n");
 		fw.write(args);
 
 		fw.flush();
 
 		fw.close();
-
-		System.out.println("파일에 저장되었습니다.");
+//
+//		System.out.println( " ====================================== ");
+//		OutputStream out = new FileOutputStream(jarFileObj);
+//		OutputStreamWriter temp = new OutputStreamWriter(out);
+//		
+//		System.out.println(temp);
+//		
+//		temp.write(args);
+//		temp.flush();
+//		temp.close();
+//		
+//		System.out.println("파일에 저장되었습니다.");
 
 	}
 	

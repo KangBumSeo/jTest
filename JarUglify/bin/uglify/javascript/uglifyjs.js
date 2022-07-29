@@ -1,5 +1,5 @@
 var options = {
-        ast: false,
+        ast: true,
         mangle: true,
         mangle_toplevel: false,
         squeeze: true,
@@ -8,8 +8,8 @@ var options = {
         verbose: false,
         show_copyright: true,
         out_same_file: false,
-        //max_line_length: 32 * 1024,
-        max_line_length: 128 * 1024,
+        max_line_length: 32 * 1024,
+        //max_line_length: 128 * 1024,
         unsafe: false,
         reserved_names: null,
         codegen_options: {
@@ -94,7 +94,6 @@ out: while (args.length > 0) {
                 options.codegen_options.ascii_only = true;
                 break;
             default:
-            	sys.debug(v);
                 filename = v;
                 break out;
         }
@@ -163,33 +162,23 @@ function show_copyright(comments) {
 
 
 function squeeze_it(code) {
-	sys.debug(" squeeze_it in~~!!! ");
         var result = "";
-        sys.debug(options.show_copyright)
         if (options.show_copyright) {
                 var tok = jsp.tokenizer(code), c;
                 c = tok();
                 result += show_copyright(c.comments_before);
         }
-        sys.debug(" squeeze_it in~~!!! 2 ");
-       // try {
+        try {
                 var ast = time_it("parse", 
                 		function(){ 
-                			// 여기파트에서 오류 
-                			sys.debug(" jsp.parse in~~!!!");
-                			//sys.debug(jsp.parse)
 		                	return jsp.parse(code); 
 	                	});
-                sys.debug(" ast*** " + ast);
-                sys.debug(" squeeze_it in~~!!! 2.1 ");
                 if (options.mangle) ast = time_it("mangle", function(){
-                	sys.debug(" squeeze_it in~~!!! 2.2 ");
                         return pro.ast_mangle(ast, {
                                 toplevel: options.mangle_toplevel,
                                 except: options.reserved_names
                         });
                 });
-                sys.debug(" squeeze_it in~~!!! 3 ");
                 if (options.squeeze) ast = time_it("squeeze", function(){
 
                         ast = pro.ast_squeeze(ast, {
@@ -204,24 +193,21 @@ function squeeze_it(code) {
                         return ast;
                 });
                 
-                sys.debug(" squeeze_it in~~!!! 4 ");
                 if (options.ast)
                         return sys.inspect(ast, null, null);
                 result += time_it("generate", function(){ return pro.gen_code(ast, options.codegen_options) });
                 if (!options.codegen_options.beautify && options.max_line_length) {
                         result = time_it("split", function(){ return pro.split_lines(result, options.max_line_length) });
                 }
-                sys.debug(" squeeze_it in~~!!! 5 ");
 				
                 return result;
-       // } catch(ex) {
-                //sys.debug(ex.stack);
-        //        sys.debug(sys.inspect(ex));
-       // }
+        } catch(ex) {
+                sys.debug(ex.stack);
+                sys.debug(sys.inspect(ex));
+        }
 };
 
 function time_it(name, cont) {
-	sys.debug("time_it >>>>>   " + options.verbose)
         if (!options.verbose)
                 return cont();
         var t1 = new Date().getTime();
@@ -233,18 +219,7 @@ function time_it(name, cont) {
 function uglify(){
 
 	if (filename) {
-		/*
-		var input=new java.io.BufferedReader(new java.io.FileReader(filename));
-		var text="",line="";
-		while((line = input.readLine())!= null)
-			text += line+'\n';
-		input.close();
-		*/
-		//sys.debug(fnText)
-		var test = fnText;
-		var result = squeeze_it(test);
-		sys.debug("uglify_no_output >>>> "+uglify_no_output)
-		//sys.debug(result)
+		var result = squeeze_it(fnText);
 		if(uglify_no_output == false ){
 			output(result);
 		}	

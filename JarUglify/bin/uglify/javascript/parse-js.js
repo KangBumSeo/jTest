@@ -272,33 +272,12 @@ JS_Parse_Error.prototype.toString = function() {
 };
 
 function js_error(message, line, col, pos) {
-		sys.debug("message >>> "+message)
-		sys.debug("line >>> "+line)
-		sys.debug("col >>> "+col)
-		sys.debug("pos >>> "+pos)
 		print(message+" | "+line+" | "+col+" | "+pos);
 	
 		throw new Error("에러명 : "+message+" | "+line+" | "+col+" | "+pos);
-       //throw new JS_Parse_Error(message, line, col, pos);
 };
 
 function is_token(token, type, val) {
-		sys.debug( " init !! token.type == type ::: " + (token.type == type) )
-		sys.debug( token.type )
-		sys.debug( "type : "+type )
-		sys.debug( "(val == null || token.value == val) ::: " + (val == null || token.value == val) )
-		sys.debug( "val : "+val )
-		sys.debug( token.value )
-		/*
-		if( token.type === 'keyword' && token.value === '=>' ){
-			val = '=>';
-			type = 'keyword';
-		}
-		*/
-		sys.debug("*************************************************************************************")
-		sys.debug( "(val == null || token.value == val) ::: " + (val == null || token.value == val) )
-		sys.debug( "token.type == type ::: " + (token.type == type) )
-		
         return token.type == type && (val == null || token.value == val);
 };
 
@@ -324,8 +303,6 @@ function tokenizer($TEXT) {
         // signal_eof : bool
         function next(signal_eof) {
                 var ch = S.text.charAt(S.pos++);
-                //sys.debug( "next sig >>> "+signal_eof )
-                //sys.debug( "next !ch >>> "+!ch)
                 if (signal_eof && !ch)
                         throw EX_EOF;
                 if (ch == "\n") {
@@ -356,8 +333,6 @@ function tokenizer($TEXT) {
         };
 
         function token(type, value, is_comment) {
-        	sys.debug( "token **** "+type+" , "+value );
-        	sys.debug( HOP(KEYWORDS, value) );
         	S.regex_allowed =  (	
         						 //  (type == "keyword" && value == "=>" &&  !HOP(KEYWORDS, value) ) ||
                                    (type == "keyword" && HOP(KEYWORDS_BEFORE_EXPRESSION, value)) ||
@@ -507,53 +482,22 @@ function tokenizer($TEXT) {
         };
 
         function read_name() {
-        		//sys.debug("------------------------------read_name_------------------------------------")
                 var backslash = false, name = "", ch;
                 
                 while ((ch = peek()) != null) {
-                	//sys.debug(S.text)
                 	var nextNum = S.pos;
                 	var nextName = S.text.charAt( (nextNum*1)+1 );
                 	var beforeName = S.text.charAt( (nextNum*1)-1 );
-                	/*
-                	sys.debug( "------------------- start ---------------------- ")
-                	sys.debug(token.type +" , "+token.value)
-                	sys.debug( nextNum +","+ S.pos )
-                	sys.debug("peek() >>>>>>>>>>>>>>>>>>>>>>> "+peek())
-                	sys.debug( "read_name S ch >>>> 현재>>>> " + ch)
-                	sys.debug( ch+nextName)
-                	sys.debug( "chk >>>> "+ (ch == "\\") )
-                	sys.debug( "chk2 >>>> "+is_identifier_char(ch))
-                	sys.debug( "------------------- end ---------------------- ")
-                	*/
                         if (!backslash) {
                                 if (ch == "\\") {backslash = true, next();}
                                 
                                 else if ( ch+nextName === '=>' && ch === "=") {
-                                	//name += ch+nextName ; 
                                 	name+=next();
-                                	//break;
                             	}
                                
                                 else if ( ch === ">" && ch != nextName  ) {
-                                	sys.debug("여기걸림");
-                                	//sys.debug("token >>>>>> "+" , "+ S.token );
-                                	//S.pos += 1;
-                                	//name=peek();
-                                	//name = " ";
-                                	//name = null;
                                 	name += next();
-                                	//next_token();
-                                	//make(null);
-                                	//eof();
-                                	//start_token();
-                                	//backslash = false;
-                                	//skip_whitespace();
-                                	//handle_slash();
-                                	//as_name()
-                                	//break;
-                                	}
-                                
+                                }
                                 else if (is_identifier_char(ch) ) name += next();
                                 else break;
                         }
@@ -565,7 +509,6 @@ function tokenizer($TEXT) {
                                 backslash = false;
                         }
                 }
-               // sys.debug('----------read_name end! >>>>>>>>>>>>>> '+name +","+peek());
                 return name;
         };
 
@@ -594,17 +537,12 @@ function tokenizer($TEXT) {
         };
 
         function read_operator(prefix) {
-        	sys.debug(" <>><><><>< read_operator ><><><><><>");
-        	
              var nextNum = S.pos;
              var nowStr = S.text.charAt( (nextNum*1));
              var nextStr = S.text.charAt( (nextNum*1)+1 );
-             sys.debug( "read_name S next text >>>> " + nextStr )
                 function grow(op) {
                         if (!peek()) return op;
                         var bigger = op + peek();
-                        sys.debug("bigger >>> "+bigger)
-                        sys.debug("op >>> "+op)
                         if (HOP(OPERATORS, bigger) && bigger != "=>") {
                                 next();
                                 return grow(bigger);
@@ -616,16 +554,7 @@ function tokenizer($TEXT) {
                                 return op;
                         }
                 };
-                sys.debug("prefix+nextStr >>> "+nowStr+nextStr)
                 return nowStr+nextStr === "=>" ? token("keyword", grow(prefix || next()) ) : token("operator", grow(prefix || next()));
-                // return token("operator", grow(prefix || next()));
-                /*
-                return function(){
-                	var growTemp = grow(prefix || next());
-                	sys.debug("growTemp" + growTemp)
-                	return growTemp === "=>" ? token("keyword", growTemp ) : token("operator", growTemp );
-                }
-                */
         };
 
         function handle_slash() {
@@ -661,17 +590,6 @@ function tokenizer($TEXT) {
 
         function read_word() {
                 var word = read_name();
-                /*
-                sys.debug( " read_word >>>>>>>>>> "+word)
-                sys.debug( " read_word KEYWORDS >>>> " )
-                sys.print( objectKeys(KEYWORDS) )
-                sys.print( objectKeys(OPERATORS) )
-                sys.print( objectKeys(KEYWORDS_ATOM) )
-                sys.debug( " read_word HOP 1>>>> " + !HOP(KEYWORDS, word) )
-                sys.debug( " read_word HOP 2>>>> " + !HOP(OPERATORS, word) )
-                sys.debug( " read_word HOP 3>>>> " + !HOP(KEYWORDS_ATOM, word) )
-                sys.debug( " read_word eq  "+ (word === "=>") )
-                */
                 return    !HOP(KEYWORDS, word)
 			        		? token("name", word)
 			        	: ( word === "=>" )
@@ -711,7 +629,6 @@ function tokenizer($TEXT) {
                 if (HOP(OPERATOR_CHARS, ch) && ch+nextStr != "=>") return read_operator();
                 if (ch == "\\" || is_identifier_start(ch) || ch+nextStr == "=>"){ 
                 	var temp =  read_word();
-                	sys.debug("read_word ******************* "+ temp);
                 	return temp;
                 	};
                 parse_error("Unexpected character '" + ch + "'");
@@ -757,29 +674,21 @@ var ASSIGNMENT = (function(a, ret, i){
         }
         return ret;
 })(
-        [
-        	//"=>",
-        	"+=", "-=", "/=", "*=", "%=", ">>=", "<<=", ">>>=", "|=", "^=", "&="],
+        [ "+=", "-=", "/=", "*=", "%=", ">>=", "<<=", ">>>=", "|=", "^=", "&="],
         { "=": true },
-        //{ "=>": true },
         0
 );
 
 var PRECEDENCE = (function(a, ret){
-	sys.debug("여기확인")
         for (var i = 0, n = 1; i < a.length; ++i, ++n) {
                 var b = a[i];
                 for (var j = 0; j < b.length; ++j) {
-	                	sys.debug(n)
                         ret[b[j]] = n;
                 }
         }
-	sys.debug("end >>> ")
-	sys.debug(Object.keys(ret))
         return ret;
 })(
         [
-        		//["=>"],
                 ["||"],
                 ["&&"],
                 ["|"],
@@ -852,7 +761,6 @@ function parse($TEXT, exigent_mode, embed_tokens) {
                 token_error(token, "Unexpected token: " + token.type + " (" + token.value + ")");
         };
         function expect_token(type, val) {
-        		sys.debug("Error : " +type +" , "+val+" , "+ is(type, val) )
                 if (is(type, val)) {
                         return next();
                 }
@@ -883,17 +791,7 @@ function parse($TEXT, exigent_mode, embed_tokens) {
                 return str instanceof NodeWithToken ? str : new NodeWithToken(str, start, end);
         };
 
-      /*
-        var statement = embed_tokens ? function() {
-        	sys.debug( "토큰 확인 해야합니다2 >>>>>>>>>>>>>>>>>>>>> " );
-                var start = S.token;
-                var ast = $statement.apply(this, arguments);
-                ast[0] = add_tokens(ast[0], start, prev());
-                return ast;
-        } : $statement;
-       */
         var statement = function(){
-        	sys.debug("embed_tokens"+embed_tokens)
         	if(embed_tokens || embed_tokens == undefined){
         		 var start = S.token;
                  var ast = $statement.apply(this, arguments);
@@ -907,13 +805,10 @@ function parse($TEXT, exigent_mode, embed_tokens) {
 
         function $statement() {
         	// function labeled_statement
-        	sys.debug( "토큰 확인 해야합니다 >>>>>>>>>>>>>>>>>>>>> " + (is("operator", "/")));
                 if (is("operator", "/")) {
                         S.peeked = null;
                         S.token = S.input(true); // force regexp
                 }
-                sys.debug("토큰 시작 값 S.token.type "+ S.token.type)
-                sys.debug(S.token.value)
                 switch (S.token.type) {
                     case "num":
                     case "string":
@@ -944,7 +839,6 @@ function parse($TEXT, exigent_mode, embed_tokens) {
                     case "keyword":
                         switch (prog1(S.token.value, next)) {
 	                        case "=>":
-	                        	sys.debug("키워드 functionArrow 접근********************")
 	                            return functionArrow_(true);
                             case "break":
                                 return break_cont("break");
@@ -1095,7 +989,6 @@ function parse($TEXT, exigent_mode, embed_tokens) {
         } : $function_;
         
         var functionArrow_ = embed_tokens ? function() {
-        	sys.debug(" *************************** functionArrow_      *************************************** ")
             var start = prev();
             var ast = $functionArrow_.apply(this, arguments);
             ast[0] = add_tokens(ast[0], start, prev());
@@ -1133,22 +1026,14 @@ function parse($TEXT, exigent_mode, embed_tokens) {
                           )//end as;
         };
         function $functionArrow_(in_statement) {
-        	sys.debug("테스트 !")
-            var name = is("name") ? prog1(S.token.value, next) : null;
+        	var name = prog1(S.token.value, next)
+        	
             if (in_statement && !name)
                     unexpected();
-            expect("(");
-            return as( in_statement/* boolean */ ? "defun" : "=>",
+            return as( in_statement  ? "defun" : "=>",
             			name,
                       // arguments
                       (function(first, a){
-                              while (!is("punc", ")")) {
-                                      if (first) first = false; else expect(",");
-                                      if (!is("name")) unexpected();
-                                      a.push(S.token.value);
-                                      next();
-                              }
-                              next();
                               return a;
                       })(true, []),
                       // body
@@ -1185,7 +1070,6 @@ function parse($TEXT, exigent_mode, embed_tokens) {
         };
 
         var switch_block_ = curry(in_loop, function(){
-        		sys.debug(" ||||||||||||||||||||||| switch_block_ +++++++++++++++++++++++++ ")
                 expect("{");
                 var a = [], cur = null;
                 while (!is("punc", "}")) {
@@ -1240,7 +1124,6 @@ function parse($TEXT, exigent_mode, embed_tokens) {
                         var name = S.token.value;
                         next();
                         if (is("keyword", "=>")) {
-                        	sys.debug("vardefs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ")
                         	 unexpected();
                              var name = S.token.value;
                              next();
@@ -1285,18 +1168,14 @@ function parse($TEXT, exigent_mode, embed_tokens) {
         function expr_atom(allow_calls) {
                 var nextNum = S.pos;
                 var nextStr = "";
-                sys.debug( "S.pos >>> " +S.pos)
-                sys.debug("nextNum >>> "+nextNum)
                 	if( nextNum != undefined  ){
                 		nextStr = S.text.charAt( nextNum+1 );
                 	}
                 	
-                sys.debug("nextStr"+nextStr)
                 if (is("keyword", "=>")
                 		// || is("operator", ">")
                 		) {
-                	sys.debug("진입")
-                    next();
+                    //next();
                     return subscripts(functionArrow_(false), allow_calls);
                 }
                 
@@ -1335,11 +1214,6 @@ function parse($TEXT, exigent_mode, embed_tokens) {
                                 : as(S.token.type, S.token.value);
                         return subscripts(prog1(atom, next), allow_calls);
                 }
-                sys.debug(S.token.type)
-                sys.debug(S.token.value)
-                sys.debug(is("keyword", "=>"));
-                sys.debug(allow_calls)
-                sys.debug("name! >>>>>>>>>>>>>>>>>>");
                 unexpected();
         };
 
@@ -1404,7 +1278,12 @@ function parse($TEXT, exigent_mode, embed_tokens) {
         };
 
         function subscripts(expr, allow_calls) {
-        	
+        		if (is("keyword", "=>")
+                		// || is("operator", ">")
+                		) {
+                    //next();
+                    return subscripts(functionArrow_(false), allow_calls);
+                }
                 if (is("punc", ".")) {
                         next();
                         return subscripts(as("dot", expr, as_name()), allow_calls);

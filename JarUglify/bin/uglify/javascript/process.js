@@ -77,7 +77,6 @@ function ast_walker(ast) {
         };
         var walkers = {
         		 "=>": function(name, args, body) {
-                 	sys.debug('1테스트~~~~~~~~~~~~~')
                  	return [ this[0], name, args.slice(), MAP(body, walk) ];
                  },
                 "string": function(str) {
@@ -949,7 +948,6 @@ function ast_squeeze(ast, options) {
 
         return w.with_walkers({
 	        	"=>": function() {
-	        		sys.debug('테스트~~~~~~~~~~~~~')
 	                var ret = _lambda.apply(this, arguments);
 	                if (ret[1] && !HOP(scope.refs, ret[1])) {
 	                        ret[1] = null;
@@ -1171,7 +1169,6 @@ function gen_code(ast, options) {
         };
 
         function needs_parens(expr) {
-        	sys.debug('테스트~~~~~~~~~~~~~')
                 if (expr[0] == "function" || expr[0] == "=>" ) {
                         // dot/call on a literal function requires the
                         // function literal itself to be parenthesized
@@ -1537,6 +1534,7 @@ function gen_code(ast, options) {
 function split_lines(code, max_line_length) {
         var splits = [ 0 ];
         jsp.parse(function(){
+        	
                 var next_token = jsp.tokenizer(code);
                 var last_split = 0;
                 var prev_token;
